@@ -1,5 +1,9 @@
 const CACHE = 'apro-v1';
-const FILES = ['/', '/index.html', '/manifest.json'];
+const FILES = [
+  '/personal-macro-trakcer/',
+  '/personal-macro-trakcer/index.html',
+  '/personal-macro-trakcer/manifest.json'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(

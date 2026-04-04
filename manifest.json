@@ -2,7 +2,7 @@
   "name": "Apro Tracker",
   "short_name": "Apro",
   "description": "Daily nutrition, supplement and weight tracker",
-  "start_url": "/index.html",
+  "start_url": "/personal-macro-trakcer/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0a",
