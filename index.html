@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>Apro · Daily Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#f0ede8;--text2:#8a8680;--text3:#5a5754;--accent:#c8f060;--accent2:#7fffd4;--warn:#ffb347;--danger:#ff6b6b;--cal:#c8f060;--pro:#7fffd4;--carb:#ffd770;--fat:#ff9f7f;--r:16px;--rs:10px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto}
+.hdr{padding:16px 20px 10px;flex-shrink:0}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start}
+.hdr-date{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
+.hdr-day{font-size:26px;font-weight:800;line-height:1;margin-top:2px}
+.hdr-tags{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{font-size:11px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;border:1px solid}
+.tag-wod{border-color:var(--accent);color:var(--accent);background:rgba(200,240,96,.08)}
+.tag-double{border-color:var(--warn);color:var(--warn);background:rgba(255,179,71,.08)}
+.tag-oly{border-color:var(--accent2);color:var(--accent2);background:rgba(127,255,212,.08)}
+.tag-rest{border-color:var(--text3);color:var(--text3)}
+.tag-office{font-size:10px;padding:2px 7px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:var(--text2)}
+.scroll{flex:1;overflow-y:auto;padding:0 20px 100px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.sec{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:18px 0 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.macro-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.macro-row{display:flex;gap:8px;margin-bottom:12px}
+.mp{flex:1;text-align:center}
+.mp-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.mp-val{font-size:22px;font-weight:700;line-height:1}
+.mp-tgt{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px}
+.c-cal{color:var(--cal)}.c-pro{color:var(--pro)}.c-carb{color:var(--carb)}.c-fat{color:var(--fat)}
+.prog-grp{display:flex;flex-direction:column;gap:7px}
+.prog-row{display:flex;align-items:center;gap:10px}
+.prog-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);width:30px;text-align:right;flex-shrink:0}
+.prog-track{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.prog-pct{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);width:30px;flex-shrink:0}
+.meal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.meal-card.logged{border-color:rgba(200,240,96,.25)}
+.meal-hdr{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;cursor:pointer}
+.meal-l{display:flex;flex-direction:column;gap:2px}
+.meal-time{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3)}
+.meal-name{font-size:14px;font-weight:600}
+.meal-r{display:flex;align-items:center;gap:10px}
+.meal-cal{font-size:13px;font-weight:600;color:var(--cal);font-family:'DM Mono',monospace}
+.mchk{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.mchk.done{background:var(--accent);border-color:var(--accent)}
+.mchk svg{width:12px;height:12px;stroke:#0a0a0a;stroke-width:2.5;fill:none;opacity:0;transition:opacity .2s}
+.mchk.done svg{opacity:1}
+.meal-detail{padding:0 15px 13px;display:none}
+.meal-card.open .meal-detail{display:block}
+.mdiv{height:1px;background:var(--border);margin-bottom:10px}
+.frow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.frow:last-child{border-bottom:none}
+.fn{font-size:12px;color:var(--text2);flex:1}
+.log-btn{width:100%;margin-top:12px;padding:10px;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.3);border-radius:var(--rs);color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.log-btn:active{transform:scale(.98);background:rgba(200,240,96,.2)}
+.log-btn.unlog{background:rgba(255,107,107,.08);border-color:rgba(255,107,107,.25);color:var(--danger)}
+.supp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.supp{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:all .2s}
+.supp.done{border-color:rgba(127,255,212,.3);background:rgba(127,255,212,.05)}
+.supp:active{transform:scale(.97)}
+.sico{font-size:18px;line-height:1}
+.sname{font-size:12px;font-weight:600}
+.sdose{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace}
+.stk-row{display:flex;justify-content:space-between;align-items:center}
+.stk{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.supp.done .stk{background:var(--accent2);border-color:var(--accent2)}
+.water-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 15px 10px}
+.water-title{font-size:14px;font-weight:600}
+.water-cnt{font-size:13px;font-family:'DM Mono',monospace;color:var(--accent2)}
+.glasses{display:flex;gap:6px;flex-wrap:wrap;padding:0 15px 14px}
+.glass{width:36px;height:44px;border:1.5px solid var(--border2);border-radius:6px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-end;overflow:hidden}
+.glass.full{border-color:rgba(127,255,212,.4)}
+.gfill{width:100%;transition:height .3s cubic-bezier(.16,1,.3,1);background:rgba(127,255,212,.5)}
+.glass.full .gfill{height:100%}
+.glass:not(.full) .gfill{height:0}
+.wt-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 15px 10px}
+.wt-title{font-size:14px;font-weight:600}
+.wt-row{display:flex;gap:8px;align-items:center;padding:0 15px}
+.wt-in{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:18px;font-weight:500;outline:none}
+.wt-in:focus{border-color:rgba(200,240,96,.4)}
+.wt-unit{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+.wt-btn{padding:10px 16px;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.3);border-radius:var(--rs);color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.wt-hist{padding:10px 15px 14px}
+.wh-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.wh-row:last-child{border-bottom:none}
+.wh-d{color:var(--text3);font-family:'DM Mono',monospace}
+.wh-v{font-family:'DM Mono',monospace}
+.d-up{color:var(--danger)}.d-dn{color:var(--accent)}.d-eq{color:var(--text3)}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,10,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 0 20px;z-index:100}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;cursor:pointer}
+.nb svg{width:20px;height:20px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:stroke .2s}
+.nb.active svg{stroke:var(--accent)}
+.nl{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);transition:color .2s}
+.nb.active .nl{color:var(--accent)}
+.page{display:none}.page.active{display:block}
+.wk-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+.wkd{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center}
+.wkd.today{border-color:rgba(200,240,96,.4)}
+.wkd-n{font-size:9px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase}
+.wkd-num{font-size:15px;font-weight:700;margin:2px 0}
+.wkd-dot{width:5px;height:5px;border-radius:50%;margin:0 auto}
+.dot-g{background:var(--accent)}.dot-a{background:var(--warn)}.dot-n{background:transparent}
+.streak{background:linear-gradient(135deg,rgba(200,240,96,.08),rgba(127,255,212,.06));border:1px solid rgba(200,240,96,.2);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.stk-l{display:flex;flex-direction:column;gap:2px}
+.stk-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.stk-num{font-size:32px;font-weight:800;color:var(--accent);line-height:1}
+.stk-sub{font-size:11px;color:var(--text3)}
+.stk-r{text-align:right}
+.tg-lbl{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.tg-val{font-size:20px;font-weight:700;color:var(--accent2)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 15px;margin-bottom:10px}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.sr:last-child{border-bottom:none}
+.sl{font-size:12px;color:var(--text2)}
+.sv{font-size:13px;font-weight:600;font-family:'DM Mono',monospace}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--accent);color:#0a0a0a;font-size:13px;font-weight:700;padding:10px 20px;border-radius:30px;z-index:200;transition:transform .3s cubic-bezier(.16,1,.3,1);white-space:nowrap;max-width:88vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+/* CSV */
+.csv-box{background:var(--surface);border:1px dashed var(--border2);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.csv-title{font-size:13px;font-weight:600;margin-bottom:5px}
+.csv-sub{font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6}
+.csv-btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.csv-btn{display:inline-block;padding:9px 16px;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.3);border-radius:var(--rs);color:var(--accent);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.csv-input{display:none}
+.csv-status{font-size:11px;color:var(--accent2);margin-top:10px;font-family:'DM Mono',monospace;min-height:16px}
+.csv-tpl{font-size:10px;color:var(--text3);margin-top:10px;font-family:'DM Mono',monospace;background:var(--surface2);padding:10px;border-radius:8px;overflow-x:auto;white-space:pre;line-height:1.6}
+/* LOADING */
+.loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px}
+.loading-title{font-size:28px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.loading-sub{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.spin{width:20px;height:20px;border:2px solid rgba(200,240,96,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading">
+  <div class="loading-title">Apro</div>
+  <div class="spin"></div>
+  <div class="loading-sub">opening database...</div>
+</div>
+
+<div class="app" id="appRoot" style="display:none">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div>
+        <div class="hdr-date" id="hDate"></div>
+        <div class="hdr-day" id="hDay"></div>
+        <div class="hdr-tags" id="hTags"></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3)">TARGET</div>
+        <div style="font-size:13px;font-weight:700;color:var(--cal);font-family:'DM Mono',monospace">2,500 kcal</div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">190p · 280c · 70f</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <!-- TODAY -->
+    <div class="page active" id="page-today">
+      <div class="macro-box">
+        <div class="macro-row">
+          <div class="mp"><div class="mp-lbl">Kcal</div><div class="mp-val c-cal" id="tCal">0</div><div class="mp-tgt">/ 2500</div></div>
+          <div class="mp"><div class="mp-lbl">Protein</div><div class="mp-val c-pro" id="tPro">0g</div><div class="mp-tgt">/ 190g</div></div>
+          <div class="mp"><div class="mp-lbl">Carbs</div><div class="mp-val c-carb" id="tCarb">0g</div><div class="mp-tgt">/ 280g</div></div>
+          <div class="mp"><div class="mp-lbl">Fat</div><div class="mp-val c-fat" id="tFat">0g</div><div class="mp-tgt">/ 70g</div></div>
+        </div>
+        <div class="prog-grp">
+          <div class="prog-row"><div class="prog-lbl">kcal</div><div class="prog-track"><div class="prog-fill" id="bCal" style="background:var(--cal);width:0%"></div></div><div class="prog-pct" id="pCal">0%</div></div>
+          <div class="prog-row"><div class="prog-lbl">pro</div><div class="prog-track"><div class="prog-fill" id="bPro" style="background:var(--pro);width:0%"></div></div><div class="prog-pct" id="pPro">0%</div></div>
+          <div class="prog-row"><div class="prog-lbl">carb</div><div class="prog-track"><div class="prog-fill" id="bCarb" style="background:var(--carb);width:0%"></div></div><div class="prog-pct" id="pCarb">0%</div></div>
+          <div class="prog-row"><div class="prog-lbl">fat</div><div class="prog-track"><div class="prog-fill" id="bFat" style="background:var(--fat);width:0%"></div></div><div class="prog-pct" id="pFat">0%</div></div>
+        </div>
+      </div>
+      <div class="sec">Meals</div>
+      <div id="mealList"></div>
+      <div class="sec">Supplements</div>
+      <div class="supp-grid" id="suppGrid"></div>
+      <div class="sec">Hydration</div>
+      <div class="card">
+        <div class="water-hdr"><div class="water-title">Water intake</div><div class="water-cnt"><span id="wCnt">0.0</span> / 3.8 L</div></div>
+        <div class="glasses" id="glasses"></div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;padding:0 15px 12px">Each glass = 500ml · tap to fill</div>
+      </div>
+      <div class="sec">Weight check-in</div>
+      <div class="card">
+        <div class="wt-hdr"><div class="wt-title">Today's weight</div><div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">Goal: 165 lbs</div></div>
+        <div class="wt-row">
+          <input type="number" class="wt-in" id="wtIn" placeholder="176.0" step="0.1" min="100" max="400">
+          <div class="wt-unit">lbs</div>
+          <button class="wt-btn" onclick="logWeight()">Log</button>
+        </div>
+        <div class="wt-hist" id="wtHist"></div>
+      </div>
+    </div>
+
+    <!-- WEEK -->
+    <div class="page" id="page-week">
+      <div class="sec" style="margin-top:4px">This week</div>
+      <div class="wk-grid" id="wkGrid"></div>
+      <div class="streak">
+        <div class="stk-l">
+          <div class="stk-lbl">Day streak</div>
+          <div class="stk-num" id="stkNum">0</div>
+          <div class="stk-sub">days logged</div>
+        </div>
+        <div class="stk-r">
+          <div class="tg-lbl">lbs to goal</div>
+          <div class="tg-val" id="toGoal">—</div>
+          <div class="tg-lbl" style="margin-top:4px">weeks left</div>
+          <div class="tg-val" id="wksLeft">—</div>
+        </div>
+      </div>
+      <div class="sec">Week log</div>
+      <div id="wkLog"></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="page" id="page-stats">
+      <div class="sec" style="margin-top:4px">Your plan</div>
+      <div class="stat-card">
+        <div class="sr"><span class="sl">Start weight</span><span class="sv">176 lbs</span></div>
+        <div class="sr"><span class="sl">Goal weight</span><span class="sv">~165 lbs</span></div>
+        <div class="sr"><span class="sl">Deadline</span><span class="sv">Jun 30 2026</span></div>
+        <div class="sr"><span class="sl">TDEE</span><span class="sv">~3,005 kcal</span></div>
+        <div class="sr"><span class="sl">Daily target</span><span class="sv">2,500 kcal</span></div>
+        <div class="sr"><span class="sl">Deficit</span><span class="sv">~500 kcal/day</span></div>
+      </div>
+      <div class="sec">Training</div>
+      <div class="stat-card">
+        <div class="sr"><span class="sl">Monday</span><span class="sv">CrossFit WOD</span></div>
+        <div class="sr"><span class="sl">Tuesday</span><span class="sv">WOD + Oly ⚡</span></div>
+        <div class="sr"><span class="sl">Wednesday</span><span class="sv">Rest 🏢 office</span></div>
+        <div class="sr"><span class="sl">Thursday</span><span class="sv">WOD + Oly ⚡ 🏢</span></div>
+        <div class="sr"><span class="sl">Friday</span><span class="sv">CrossFit WOD</span></div>
+        <div class="sr"><span class="sl">Saturday</span><span class="sv">90-min Oly</span></div>
+        <div class="sr"><span class="sl">Sunday</span><span class="sv">Rest + batch cook</span></div>
+      </div>
+
+      <!-- CSV IMPORT -->
+      <div class="sec">Customise meal plans</div>
+      <div class="csv-box">
+        <div class="csv-title">Import from CSV</div>
+        <div class="csv-sub">Upload a CSV to override any meal slot (morning, pre_wod, pre_oly, standup, lunch_wfh, lunch_office, dinner). Changes persist permanently in the app — no need to re-import.</div>
+        <div class="csv-btn-row">
+          <label class="csv-btn">
+            Choose CSV
+            <input type="file" class="csv-input" id="csvInput" accept=".csv" onchange="handleCSV(this)">
+          </label>
+          <button class="csv-btn" style="background:rgba(255,107,107,.08);border-color:rgba(255,107,107,.25);color:var(--danger)" onclick="clearCSV()">Clear CSV</button>
+        </div>
+        <div class="csv-status" id="csvStatus"></div>
+        <div id="csvLoaded"></div>
+        <div class="csv-tpl">meal_type,time,name,cal,pro,carb,fat,foods
+morning,8:30am,Morning routine,605,64,53,18,2 scoops whey|80g oats
+pre_wod,5:30am,Pre-WOD,200,26,25,1,Banana|1 scoop whey
+pre_oly,12:00pm,Pre-Oly fuel,210,31,26,1,Banana|30g shake
+standup,10:00am,Post-standup,165,17,22,0,Greek yogurt + honey
+lunch_wfh,1:00pm,WFH Lunch,835,87,72,21,647 bread+eggs|Rajma patties
+lunch_office,1:00pm,Office Lunch,855,55,107,19,Protein shake|Falafel bowl
+dinner,6:30pm,Dinner,880,65,88,24,Ramen/Poha + 2 eggs|Yogurt|Ghee</div>
+      </div>
+
+      <div class="sec">Rules</div>
+      <div class="stat-card">
+        <div class="sr"><span class="sl">Pre-WOD fuel</span><span class="sv">Banana + 1 scoop</span></div>
+        <div class="sr"><span class="sl">Chip swap</span><span class="sv">Makhana / papad</span></div>
+        <div class="sr"><span class="sl">Fat filler</span><span class="sv">Ghee on dinner daily</span></div>
+        <div class="sr"><span class="sl">Sleep target</span><span class="sv">7.5 hrs minimum</span></div>
+        <div class="sr"><span class="sl">Creatine</span><span class="sv">5g post-WOD shake</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="nb active" id="nav-today" onclick="switchPage('today')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+      <div class="nl">Today</div>
+    </div>
+    <div class="nb" id="nav-week" onclick="switchPage('week')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <div class="nl">Week</div>
+    </div>
+    <div class="nb" id="nav-stats" onclick="switchPage('stats')">
+      <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      <div class="nl">Stats</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const TARGETS={cal:2500,pro:190,carb:280,fat:70};
+const GOAL=165, START=176;
+const DEADLINE=new Date('2026-06-30');
+
+const DAYS={
+  0:{name:'Sunday',   sessions:['Rest'],              isOffice:false,isDouble:false},
+  1:{name:'Monday',   sessions:['CrossFit WOD'],       isOffice:false,isDouble:false},
+  2:{name:'Tuesday',  sessions:['CrossFit WOD','Oly'], isOffice:false,isDouble:true},
+  3:{name:'Wednesday',sessions:['Rest'],               isOffice:true, isDouble:false},
+  4:{name:'Thursday', sessions:['CrossFit WOD','Oly'], isOffice:true, isDouble:true},
+  5:{name:'Friday',   sessions:['CrossFit WOD'],       isOffice:false,isDouble:false},
+  6:{name:'Saturday', sessions:['90-min Oly'],         isOffice:false,isDouble:false},
+};
+
+const DEFAULTS={
+  'wfh-wod':[
+    {id:'pre',  time:'5:30am', name:'Pre-WOD',         cal:200,pro:26, carb:25,  fat:1,  foods:['Banana','1 scoop whey']},
+    {id:'morn', time:'8:30am', name:'Morning routine',  cal:605,pro:64, carb:53,  fat:18, foods:['2 scoops whey + supps','80g oats + 1 tbsp PB']},
+    {id:'lunch',time:'1:00pm', name:'WFH Lunch',        cal:835,pro:87, carb:72,  fat:21, foods:['4x 647 bread + 2 eggs + Jarlsberg','Rajma patties (2)','30g protein shake']},
+    {id:'din',  time:'6:30pm', name:'Dinner',           cal:880,pro:65, carb:88,  fat:24, foods:['Ramen OR Poha + 2 eggs','Greek yogurt (zero fat)','1 tbsp ghee']},
+  ],
+  'wfh-double':[
+    {id:'pre',  time:'5:30am',  name:'Pre-WOD',          cal:200,pro:26, carb:25,  fat:1,  foods:['Banana','1 scoop whey']},
+    {id:'morn', time:'8:30am',  name:'Post-WOD morning', cal:605,pro:64, carb:53,  fat:18, foods:['2 scoops whey + supps','80g oats + 1 tbsp PB']},
+    {id:'std',  time:'10:00am', name:'Post-standup',     cal:165,pro:17, carb:22,  fat:0,  foods:['Greek yogurt + 1 tbsp honey']},
+    {id:'lunch',time:'1:00pm',  name:'WFH Lunch',        cal:835,pro:87, carb:72,  fat:21, foods:['4x 647 bread + 2 eggs + Jarlsberg','Rajma patties (2)','30g protein shake']},
+    {id:'din',  time:'6:30pm',  name:'Dinner',           cal:880,pro:65, carb:88,  fat:24, foods:['Ramen OR Poha + 2 eggs','Greek yogurt (zero fat)','1 tbsp ghee']},
+  ],
+  'office-rest':[
+    {id:'morn', time:'8:30am', name:'Morning routine',  cal:605,pro:64, carb:53,  fat:18, foods:['2 scoops whey + supps','80g oats + 1 tbsp PB']},
+    {id:'lunch',time:'1:00pm', name:'Office Lunch',     cal:855,pro:55, carb:107, fat:19, foods:['30g protein shake','Falafel bowl (rice+2 pita+hummus)','Extra pita']},
+    {id:'din',  time:'6:30pm', name:'Dinner',           cal:880,pro:65, carb:88,  fat:24, foods:['Ramen OR Poha + 2 eggs','Greek yogurt (zero fat)','1 tbsp ghee']},
+  ],
+  'office-double':[
+    {id:'pre',  time:'5:30am',  name:'Pre-WOD',          cal:200,pro:26, carb:25,  fat:1,  foods:['Banana','1 scoop whey']},
+    {id:'morn', time:'8:30am',  name:'Post-WOD morning', cal:605,pro:64, carb:53,  fat:18, foods:['2 scoops whey + supps','80g oats + 1 tbsp PB']},
+    {id:'std',  time:'10:00am', name:'Post-standup',     cal:165,pro:17, carb:22,  fat:0,  foods:['Greek yogurt + 1 tbsp honey']},
+    {id:'lunch',time:'1:00pm',  name:'Office Lunch',     cal:855,pro:55, carb:107, fat:19, foods:['30g protein shake','Falafel bowl (rice+2 pita+hummus)','Extra pita']},
+    {id:'din',  time:'6:30pm',  name:'Dinner',           cal:880,pro:65, carb:88,  fat:24, foods:['Ramen OR Poha + 2 eggs','Greek yogurt (zero fat)','1 tbsp ghee']},
+  ],
+  'rest':[
+    {id:'morn', time:'8:30am', name:'Morning routine',  cal:605,pro:64, carb:53,  fat:18, foods:['2 scoops whey + supps','80g oats + 1 tbsp PB']},
+    {id:'lunch',time:'1:00pm', name:'WFH Lunch',        cal:835,pro:87, carb:72,  fat:21, foods:['4x 647 bread + 2 eggs + Jarlsberg','Rajma patties (2)','30g protein shake']},
+    {id:'din',  time:'6:30pm', name:'Dinner',           cal:880,pro:65, carb:88,  fat:24, foods:['Ramen OR Poha + 2 eggs','Greek yogurt (zero fat)','1 tbsp ghee']},
+  ],
+  'oly':[
+    {id:'morn', time:'8:30am', name:'Morning routine',  cal:605,pro:64, carb:53,  fat:18, foods:['2 scoops whey + supps','80g oats + 1 tbsp PB']},
+    {id:'pre',  time:'12:00pm',name:'Pre-Oly fuel',     cal:210,pro:31, carb:26,  fat:1,  foods:['Banana','30g protein shake']},
+    {id:'lunch',time:'1:00pm', name:'Lunch (rice day)', cal:745,pro:22, carb:118, fat:14, foods:['Rice + dal/curry','1 tbsp ghee']},
+    {id:'din',  time:'7:00pm', name:'Post-Oly dinner',  cal:620,pro:63, carb:48,  fat:18, foods:['4x 647 bread + 2 eggs + Jarlsberg','Greek yogurt (zero fat)']},
+  ],
+};
+
+const SUPPS=[
+  {id:'whey',    ico:'🥛',name:'Whey protein', dose:'2 scoops AM'},
+  {id:'creatine',ico:'💪',name:'Creatine',     dose:'5g post-WOD'},
+  {id:'d3',      ico:'☀️',name:'Vitamin D3',   dose:'2x breakfast'},
+  {id:'multi',   ico:'💊',name:'One A Day',    dose:'1x breakfast'},
+  {id:'fishoil', ico:'🐟',name:'Fish oil',     dose:'3 softgels dinner'},
+  {id:'mag',     ico:'🌙',name:'Magnesium',    dose:'300mg before bed'},
+];
+
+// ── INDEXED DB ────────────────────────────────────────────────────────────────
+let DB = null;
+
+function openDB() {
+  return new Promise((res,rej) => {
+    const req = indexedDB.open('AproTracker', 2);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      ['days','weights','config'].forEach(s => {
+        if (!d.objectStoreNames.contains(s))
+          d.createObjectStore(s, {keyPath: s==='config'?'key':'date'});
+      });
+    };
+    req.onsuccess = e => { DB = e.target.result; res(DB); };
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+
+function tx(store, mode='readonly') {
+  return DB.transaction(store, mode).objectStore(store);
+}
+function dbGet(store, key) {
+  return new Promise((res,rej) => { const r=tx(store).get(key); r.onsuccess=e=>res(e.target.result||null); r.onerror=e=>rej(e.target.error); });
+}
+function dbPut(store, val) {
+  return new Promise((res,rej) => { const r=tx(store,'readwrite').put(val); r.onsuccess=()=>res(); r.onerror=e=>rej(e.target.error); });
+}
+function dbGetAll(store) {
+  return new Promise((res,rej) => { const r=tx(store).getAll(); r.onsuccess=e=>res(e.target.result||[]); r.onerror=e=>rej(e.target.error); });
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function dk() {
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function dKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+async function getDayData(date) {
+  const r = await dbGet('days', date);
+  return r ? r.data : {meals:{},supps:{},water:0};
+}
+async function saveDayData(date, data) { await dbPut('days', {date, data}); }
+async function getWeights() {
+  const rows = await dbGetAll('weights');
+  return rows.sort((a,b) => a.date.localeCompare(b.date));
+}
+async function getCfg(key) { const r=await dbGet('config',key); return r?r.value:null; }
+async function setCfg(key, value) { await dbPut('config', {key, value}); }
+
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function fmt(n){ return n>=1000?n.toLocaleString():String(n); }
+
+// ── MEAL PLAN ─────────────────────────────────────────────────────────────────
+let customMeals = {}; // id -> meal object from CSV
+
+const CSV_ID_MAP = {
+  morning:'morn', pre_wod:'pre', pre_oly:'pre',
+  standup:'std', std:'std',
+  lunch_wfh:'lunch', lunch_office:'lunch',
+  dinner:'din',
+};
+
+function planKey(dow) {
+  const c=DAYS[dow];
+  if(dow===0) return 'rest';
+  if(dow===6) return 'oly';
+  if(c.isOffice&&c.isDouble) return 'office-double';
+  if(c.isOffice&&!c.isDouble) return 'office-rest';
+  if(!c.isOffice&&c.isDouble) return 'wfh-double';
+  return 'wfh-wod';
+}
+
+function getPlan(dow) {
+  const base = JSON.parse(JSON.stringify(DEFAULTS[planKey(dow)]||[]));
+  if (!Object.keys(customMeals).length) return base;
+  return base.map(m => customMeals[m.id] ? {...m, ...customMeals[m.id]} : m);
+}
+
+// ── CSV ───────────────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l=>l.trim()&&!l.trim().startsWith('meal_type'));
+  const out = {};
+  lines.forEach(line => {
+    // basic CSV split respecting quotes
+    const cols=[], cur={v:'',q:false};
+    for(const ch of line) {
+      if(ch==='"'){cur.q=!cur.q;continue;}
+      if(ch===','&&!cur.q){cols.push(cur.v.trim());cur.v='';continue;}
+      cur.v+=ch;
+    }
+    cols.push(cur.v.trim());
+    if(cols.length<7) return;
+    const [type,time,name,cal,pro,carb,fat,...rest]=cols;
+    const foodsRaw=rest.join(',');
+    const id=CSV_ID_MAP[type.trim().toLowerCase()];
+    if(!id) return;
+    out[id]={
+      id, time:time.trim(), name:name.trim(),
+      cal:parseInt(cal)||0, pro:parseInt(pro)||0,
+      carb:parseInt(carb)||0, fat:parseInt(fat)||0,
+      foods: foodsRaw ? foodsRaw.replace(/^"|"$/g,'').split('|').map(f=>f.trim()).filter(Boolean) : [],
+    };
+  });
+  return out;
+}
+
+async function handleCSV(input) {
+  const file=input.files[0];
+  if(!file) return;
+  try {
+    const text = await file.text();
+    const parsed = parseCSV(text);
+    const n = Object.keys(parsed).length;
+    if(!n){toast('No valid rows — check format');return;}
+    customMeals = parsed;
+    await setCfg('customMeals', parsed);
+    document.getElementById('csvStatus').textContent=`✓ ${n} meal slots loaded from ${file.name}`;
+    showCSVLoaded();
+    await renderMeals();
+    toast(`CSV imported — ${n} meals updated`);
+  } catch(e) {
+    toast('CSV error — check format');
+    console.error(e);
+  }
+}
+
+async function clearCSV() {
+  customMeals={};
+  await setCfg('customMeals', {});
+  document.getElementById('csvStatus').textContent='CSV cleared — using built-in plan';
+  document.getElementById('csvLoaded').innerHTML='';
+  await renderMeals();
+  toast('Reverted to default plan');
+}
+
+function showCSVLoaded() {
+  const el=document.getElementById('csvLoaded');
+  if(!Object.keys(customMeals).length){el.innerHTML='';return;}
+  el.innerHTML='<div style="font-size:11px;color:var(--text3);margin-top:8px;font-family:\'DM Mono\',monospace">Active: '+
+    Object.values(customMeals).map(m=>`<span style="color:var(--accent2)">${m.name}</span>`).join(', ')+'</div>';
+}
+
+// ── HEADER ────────────────────────────────────────────────────────────────────
+function renderHeader() {
+  const now=new Date(),dow=now.getDay(),c=DAYS[dow];
+  const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('hDate').textContent=`${D[dow]} · ${M[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  document.getElementById('hDay').textContent=c.name;
+  const el=document.getElementById('hTags'); el.innerHTML='';
+  const isRest=c.sessions[0]==='Rest';
+  const t1=document.createElement('span');
+  if(!isRest){
+    t1.className='tag '+(c.isDouble?'tag-double':c.sessions[0].includes('Oly')?'tag-oly':'tag-wod');
+    t1.textContent=c.isDouble?'⚡ Double session':c.sessions[0];
+  } else {
+    t1.className='tag tag-rest'; t1.textContent='Rest day';
+  }
+  el.appendChild(t1);
+  if(c.isOffice){
+    const t2=document.createElement('span'); t2.className='tag tag-office'; t2.textContent='🏢 Office day'; el.appendChild(t2);
+  }
+}
+
+// ── MEALS ─────────────────────────────────────────────────────────────────────
+async function renderMeals() {
+  const meals=getPlan(new Date().getDay());
+  const data=await getDayData(dk());
+  const el=document.getElementById('mealList'); el.innerHTML='';
+  meals.forEach(m=>{
+    const logged=!!data.meals[m.id];
+    const card=document.createElement('div');
+    card.className=`meal-card${logged?' logged':''}`;
+    card.id='mc-'+m.id;
+    const foodRows=(m.foods||[]).map(f=>`<div class="frow"><span class="fn">${f}</span></div>`).join('');
+    card.innerHTML=`
+      <div class="meal-hdr" onclick="toggleMC('${m.id}')">
+        <div class="meal-l"><div class="meal-time">${m.time}</div><div class="meal-name">${m.name}</div></div>
+        <div class="meal-r">
+          <div class="meal-cal">${fmt(m.cal)} kcal</div>
+          <div class="mchk${logged?' done':''}" id="chk-${m.id}"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+      </div>
+      <div class="meal-detail">
+        <div class="mdiv"></div>
+        ${foodRows}
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;font-family:'DM Mono',monospace">
+          <span style="color:var(--pro)">${m.pro}g P</span><span style="color:var(--carb)">${m.carb}g C</span><span style="color:var(--fat)">${m.fat}g F</span>
+        </div>
+        <button class="log-btn${logged?' unlog':''}" onclick="logMeal('${m.id}',${m.cal},${m.pro},${m.carb},${m.fat})">${logged?'Unlog meal':'Mark as eaten'}</button>
+      </div>`;
+    el.appendChild(card);
+  });
+  updateMacros(data);
+}
+
+function toggleMC(id){ document.getElementById('mc-'+id).classList.toggle('open'); }
+
+async function logMeal(id,cal,pro,carb,fat) {
+  const key=dk(), data=await getDayData(key);
+  if(data.meals[id]){delete data.meals[id]; toast('Meal unlogged');}
+  else{data.meals[id]={cal,pro,carb,fat}; toast('Meal logged ✓');}
+  await saveDayData(key,data); renderMeals();
+}
+
+function updateMacros(data) {
+  let cal=0,pro=0,carb=0,fat=0;
+  Object.values(data.meals||{}).forEach(m=>{cal+=m.cal;pro+=m.pro;carb+=m.carb;fat+=m.fat;});
+  document.getElementById('tCal').textContent=fmt(cal);
+  document.getElementById('tPro').textContent=pro+'g';
+  document.getElementById('tCarb').textContent=carb+'g';
+  document.getElementById('tFat').textContent=fat+'g';
+  const pb=(b,p,v,t)=>{const pct=Math.min(100,Math.round(v/t*100));document.getElementById(b).style.width=pct+'%';document.getElementById(p).textContent=pct+'%';};
+  pb('bCal','pCal',cal,TARGETS.cal); pb('bPro','pPro',pro,TARGETS.pro);
+  pb('bCarb','pCarb',carb,TARGETS.carb); pb('bFat','pFat',fat,TARGETS.fat);
+}
+
+// ── SUPPS ─────────────────────────────────────────────────────────────────────
+async function renderSupps() {
+  const data=await getDayData(dk()), el=document.getElementById('suppGrid'); el.innerHTML='';
+  SUPPS.forEach(s=>{
+    const done=!!data.supps[s.id];
+    const d=document.createElement('div'); d.className=`supp${done?' done':''}`; d.onclick=()=>toggleSupp(s.id);
+    d.innerHTML=`<div class="sico">${s.ico}</div><div class="stk-row"><div><div class="sname">${s.name}</div><div class="sdose">${s.dose}</div></div><div class="stk">${done?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div></div>`;
+    el.appendChild(d);
+  });
+}
+async function toggleSupp(id) {
+  const key=dk(), data=await getDayData(key);
+  if(data.supps[id])delete data.supps[id]; else data.supps[id]=true;
+  await saveDayData(key,data); renderSupps(); toast(data.supps[id]?'Taken ✓':'Unmarked');
+}
+
+// ── WATER ─────────────────────────────────────────────────────────────────────
+async function renderWater() {
+  const data=await getDayData(dk()), filled=data.water||0;
+  document.getElementById('wCnt').textContent=(filled*0.5).toFixed(1);
+  const el=document.getElementById('glasses'); el.innerHTML='';
+  for(let i=0;i<8;i++){
+    const g=document.createElement('div'); g.className=`glass${i<filled?' full':''}`;
+    g.innerHTML='<div class="gfill"></div>';
+    const idx=i; g.onclick=()=>setWater(idx); el.appendChild(g);
+  }
+}
+async function setWater(idx) {
+  const key=dk(), data=await getDayData(key), filled=data.water||0;
+  data.water=(idx<filled)?idx:idx+1;
+  await saveDayData(key,data); renderWater(); toast(`${(data.water*0.5).toFixed(1)}L logged 💧`);
+}
+
+// ── WEIGHT ────────────────────────────────────────────────────────────────────
+async function renderWtHist() {
+  const log=await getWeights(), el=document.getElementById('wtHist');
+  if(!log.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding-top:8px">No entries yet</div>';return;}
+  const recent=log.slice(-5).reverse();
+  el.innerHTML=recent.map((e,i)=>{
+    const prev=recent[i+1]; let dh='';
+    if(prev){const diff=(e.w-prev.w).toFixed(1);const cls=diff>0?'d-up':diff<0?'d-dn':'d-eq';dh=`<span class="${cls}">${diff>0?'+':''}${diff}</span>`;}
+    return `<div class="wh-row"><span class="wh-d">${e.date}</span><span class="wh-v">${e.w} lbs ${dh}</span></div>`;
+  }).join('');
+}
+async function logWeight() {
+  const val=parseFloat(document.getElementById('wtIn').value);
+  if(!val||val<100||val>400){toast('Enter valid weight');return;}
+  await dbPut('weights',{date:dk(),w:val});
+  renderWtHist(); updateGoalStats(); toast(`${val} lbs logged ✓`);
+}
+async function updateGoalStats() {
+  const log=await getWeights(), now=new Date();
+  const wks=Math.max(0,Math.round((DEADLINE-now)/(7*24*3600*1000)));
+  const wkEl=document.getElementById('wksLeft'); if(wkEl)wkEl.textContent=wks;
+  const tgEl=document.getElementById('toGoal');
+  if(tgEl){
+    if(log.length){const diff=(log[log.length-1].w-GOAL).toFixed(1);tgEl.textContent=diff>0?diff+' lbs':'Goal!';}
+    else tgEl.textContent=(START-GOAL)+' lbs';
+  }
+}
+
+// ── WEEK ──────────────────────────────────────────────────────────────────────
+async function renderWeekGrid() {
+  const now=new Date(),dow=now.getDay(),el=document.getElementById('wkGrid'); el.innerHTML='';
+  const dn=['S','M','T','W','T','F','S'];
+  for(let i=0;i<7;i++){
+    const d=new Date(now); d.setDate(now.getDate()-dow+i);
+    const data=await getDayData(dKey(d));
+    const mc=Object.keys(data.meals||{}).length;
+    const dc=mc>=3?'dot-g':mc>0?'dot-a':'dot-n';
+    const div=document.createElement('div'); div.className=`wkd${i===dow?' today':''}`;
+    div.innerHTML=`<div class="wkd-n">${dn[i]}</div><div class="wkd-num">${d.getDate()}</div><div class="wkd-dot ${dc}"></div>`;
+    el.appendChild(div);
+  }
+}
+async function renderWeekLog() {
+  const now=new Date(),dow=now.getDay(),el=document.getElementById('wkLog'); el.innerHTML='';
+  const dn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  for(let i=0;i<7;i++){
+    const d=new Date(now); d.setDate(now.getDate()-dow+i);
+    const data=await getDayData(dKey(d));
+    let cal=0,pro=0;
+    Object.values(data.meals||{}).forEach(m=>{cal+=m.cal;pro+=m.pro;});
+    const mc=Object.keys(data.meals||{}).length, sc=Object.keys(data.supps||{}).length;
+    const c=document.createElement('div'); c.className='stat-card'; c.style.marginBottom='8px';
+    c.innerHTML=`
+      <div class="sr"><span class="sl" style="${i===dow?'color:var(--accent);font-weight:600':''}">${dn[i]}${i===dow?' (today)':''}</span><span class="sv">${cal?fmt(cal)+' kcal':'—'}</span></div>
+      ${cal?`<div class="sr"><span class="sl">Protein</span><span class="sv c-pro">${pro}g</span></div>`:''}
+      <div class="sr"><span class="sl">Meals logged</span><span class="sv">${mc} meal${mc!==1?'s':''}</span></div>
+      <div class="sr"><span class="sl">Supps</span><span class="sv">${sc} / 6</span></div>
+      <div class="sr"><span class="sl">Water</span><span class="sv" style="color:var(--accent2)">${((data.water||0)*0.5).toFixed(1)}L</span></div>`;
+    el.appendChild(c);
+  }
+}
+async function renderStreak() {
+  const now=new Date(); let streak=0;
+  for(let i=0;i<60;i++){
+    const d=new Date(now); d.setDate(now.getDate()-i);
+    const data=await getDayData(dKey(d));
+    if(Object.keys(data.meals||{}).length>0) streak++;
+    else if(i>0) break;
+  }
+  const el=document.getElementById('stkNum'); if(el)el.textContent=streak;
+  updateGoalStats();
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+async function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='week'){await renderWeekGrid();await renderWeekLog();await renderStreak();}
+  if(name==='stats'){showCSVLoaded();}
+}
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
+function registerSW() {
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js')
+      .then(()=>console.log('SW registered'))
+      .catch(()=>{});
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    await openDB();
+    const saved = await getCfg('customMeals');
+    if(saved && Object.keys(saved).length) {
+      customMeals = saved;
+      document.getElementById('csvStatus').textContent = `✓ ${Object.keys(saved).length} custom meal slots active`;
+    }
+    renderHeader();
+    await Promise.all([renderMeals(), renderSupps(), renderWater(), renderWtHist(), updateGoalStats()]);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('appRoot').style.display='flex';
+    registerSW();
+  } catch(e) {
+    console.error(e);
+    document.querySelector('.loading-sub').textContent='Error: '+e.message;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
