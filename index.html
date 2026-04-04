@@ -236,22 +236,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
         <div class="sr"><span class="sl">Daily target</span><span class="sv">2,500 kcal</span></div>
         <div class="sr"><span class="sl">Deficit</span><span class="sv">~500 kcal/day</span></div>
       </div>
+
       <div class="sec">Training</div>
       <div class="stat-card">
-        <div class="sr"><span class="sl">Monday</span><span class="sv">CrossFit WOD</span></div>
-        <div class="sr"><span class="sl">Tuesday</span><span class="sv">WOD + Oly ⚡</span></div>
-        <div class="sr"><span class="sl">Wednesday</span><span class="sv">Rest 🏢 office</span></div>
-        <div class="sr"><span class="sl">Thursday</span><span class="sv">WOD + Oly ⚡ 🏢</span></div>
-        <div class="sr"><span class="sl">Friday</span><span class="sv">CrossFit WOD</span></div>
-        <div class="sr"><span class="sl">Saturday</span><span class="sv">90-min Oly</span></div>
-        <div class="sr"><span class="sl">Sunday</span><span class="sv">Rest + batch cook</span></div>
+        <div class="sr"><span class="sl">Monday</span><span class="sv">Push + CrossFit WOD</span></div>
+        <div class="sr"><span class="sl">Tuesday</span><span class="sv">Snatch + WOD ⚡</span></div>
+        <div class="sr"><span class="sl">Wednesday</span><span class="sv">OH Strength + WOD 🏢</span></div>
+        <div class="sr"><span class="sl">Thursday</span><span class="sv">C&J + WOD ⚡</span></div>
+        <div class="sr"><span class="sl">Friday</span><span class="sv">Back/Bis + CrossFit WOD</span></div>
+        <div class="sr"><span class="sl">Saturday</span><span class="sv">Wild 20 Lower + Complex</span></div>
+        <div class="sr"><span class="sl">Sunday</span><span class="sv">Wild 20 Upper + batch cook</span></div>
       </div>
 
       <!-- CSV IMPORT -->
       <div class="sec">Customise meal plans</div>
       <div class="csv-box">
         <div class="csv-title">Import from CSV</div>
-        <div class="csv-sub">Upload a CSV to override any meal slot (morning, pre_wod, pre_oly, standup, lunch_wfh, lunch_office, dinner). Changes persist permanently in the app — no need to re-import.</div>
+        <div class="csv-sub">Upload a CSV to override any meal slot...</div>
         <div class="csv-btn-row">
           <label class="csv-btn">
             Choose CSV
@@ -262,13 +263,29 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
         <div class="csv-status" id="csvStatus"></div>
         <div id="csvLoaded"></div>
         <div class="csv-tpl">meal_type,time,name,cal,pro,carb,fat,foods
-morning,8:30am,Morning routine,605,64,53,18,2 scoops whey|80g oats
-pre_wod,5:30am,Pre-WOD,200,26,25,1,Banana|1 scoop whey
-pre_oly,12:00pm,Pre-Oly fuel,210,31,26,1,Banana|30g shake
-standup,10:00am,Post-standup,165,17,22,0,Greek yogurt + honey
-lunch_wfh,1:00pm,WFH Lunch,835,87,72,21,647 bread+eggs|Rajma patties
-lunch_office,1:00pm,Office Lunch,855,55,107,19,Protein shake|Falafel bowl
-dinner,6:30pm,Dinner,880,65,88,24,Ramen/Poha + 2 eggs|Yogurt|Ghee</div>
+          morning,8:30am,Morning routine,605,64,53,18,2 scoops whey|80g oats
+          pre_wod,5:30am,Pre-WOD,200,26,25,1,Banana|1 scoop whey
+          pre_oly,12:00pm,Pre-Oly fuel,210,31,26,1,Banana|30g shake
+          standup,10:00am,Post-standup,165,17,22,0,Greek yogurt + honey
+          lunch_wfh,1:00pm,WFH Lunch,835,87,72,21,647 bread+eggs|Rajma patties
+          lunch_office,1:00pm,Office Lunch,855,55,107,19,Protein shake|Falafel bowl
+          dinner,6:30pm,Dinner,880,65,88,24,Ramen/Poha + 2 eggs|Yogurt|Ghee</div>
+      </div>
+
+      <div class="sec">Reminders</div>
+      <div class="card">
+        <div class="water-hdr" style="padding-bottom:16px">
+          <div>
+            <div class="water-title">Daily Reminder</div>
+            <div id="reminderStatus" style="font-size:13px;color:var(--accent2);margin-top:4px">
+              Not set
+            </div>
+          </div>
+          <button onclick="showReminderModal()" 
+                  style="padding:10px 16px;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.3);border-radius:10px;color:var(--accent);font-weight:600;cursor:pointer">
+            Set Time
+          </button>
+        </div>
       </div>
 
       <div class="sec">Rules</div>
@@ -280,7 +297,7 @@ dinner,6:30pm,Dinner,880,65,88,24,Ramen/Poha + 2 eggs|Yogurt|Ghee</div>
         <div class="sr"><span class="sl">Creatine</span><span class="sv">5g post-WOD shake</span></div>
       </div>
     </div>
-  </div>
+  </div>   
 
   <div class="nav">
     <div class="nb active" id="nav-today" onclick="switchPage('today')">
@@ -297,7 +314,30 @@ dinner,6:30pm,Dinner,880,65,88,24,Ramen/Poha + 2 eggs|Yogurt|Ghee</div>
     </div>
   </div>
 </div>
-<div class="toast" id="toast"></div>
+<div id="reminderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:320px">
+    <div style="font-size:18px;font-weight:700;margin-bottom:20px;text-align:center">Set Daily Reminder</div>
+    
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-size:13px;color:var(--text3);margin-bottom:8px">Reminder Time</label>
+      <input type="time" id="reminderTimeInput" 
+              style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:18px">
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <button onclick="hideReminderModal()" 
+              style="flex:1;padding:14px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-weight:600">
+        Cancel
+      </button>
+      <button onclick="saveReminderTime()" 
+              style="flex:1;padding:14px;background:var(--accent);color:#0a0a0a;border:none;border-radius:10px;font-weight:700">
+        Save Reminder
+      </button>
+    </div>
+  </div>
+</div>
+  
+  <div class="toast" id="toast"></div>
 
 <script>
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
@@ -348,9 +388,9 @@ const DEFAULTS={
   ],
   'oly':[
     {id:'morn', time:'8:30am', name:'Morning routine',  cal:605,pro:64, carb:53,  fat:18, foods:['2 scoops whey + supps','80g oats + 1 tbsp PB']},
-    {id:'pre',  time:'12:00pm',name:'Pre-Oly fuel',     cal:210,pro:31, carb:26,  fat:1,  foods:['Banana','30g protein shake']},
+    {id:'pre',  time:'12:00pm',name:'Pre-workout fuel',     cal:210,pro:31, carb:26,  fat:1,  foods:['Banana','30g protein shake']},
     {id:'lunch',time:'1:00pm', name:'Lunch (rice day)', cal:745,pro:22, carb:118, fat:14, foods:['Rice + dal/curry','1 tbsp ghee']},
-    {id:'din',  time:'7:00pm', name:'Post-Oly dinner',  cal:620,pro:63, carb:48,  fat:18, foods:['4x 647 bread + 2 eggs + Jarlsberg','Greek yogurt (zero fat)']},
+    {id:'din',  time:'7:00pm', name:'Post-workout dinner',  cal:620,pro:63, carb:48,  fat:18, foods:['4x 647 bread + 2 eggs + Jarlsberg','Greek yogurt (zero fat)']},
   ],
 };
 
@@ -694,12 +734,22 @@ async function renderStreak() {
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
 async function switchPage(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  if(name==='week'){await renderWeekGrid();await renderWeekLog();await renderStreak();}
-  if(name==='stats'){showCSVLoaded();}
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+
+  if (name === 'week') {
+    await renderWeekGrid();
+    await renderWeekLog();
+    await renderStreak();
+  }
+  
+  if (name === 'stats') {
+    showCSVLoaded();
+    updateReminderStatus();
+  }
 }
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
@@ -725,12 +775,119 @@ async function init() {
     document.getElementById('loading').style.display='none';
     document.getElementById('appRoot').style.display='flex';
     registerSW();
+    setupDailyReminder();
   } catch(e) {
     console.error(e);
     document.querySelector('.loading-sub').textContent='Error: '+e.message;
   }
 }
 
+/// ======================
+// CUSTOM DAILY REMINDER
+// ======================
+
+let reminderHour = 19;   // default 7 PM
+let reminderMinute = 0;
+
+async function setupDailyReminder() {
+  if (!("Notification" in window)) return;
+
+  const savedHour = await getCfg('reminderHour');
+  const savedMinute = await getCfg('reminderMinute');
+
+  if (savedHour !== null) reminderHour = savedHour;
+  if (savedMinute !== null) reminderMinute = savedMinute;
+
+  updateReminderStatus();
+
+  // Request permission and schedule if enabled
+  if (Notification.permission === "granted") {
+    scheduleCustomReminder();
+  }
+}
+
+function updateReminderStatus() {
+  const statusEl = document.getElementById('reminderStatus');
+  if (!statusEl) return;
+  
+  const timeStr = `${reminderHour.toString().padStart(2,'0')}:${reminderMinute.toString().padStart(2,'0')}`;
+  statusEl.textContent = `Daily at ${timeStr}`;
+  statusEl.style.color = 'var(--accent2)';
+}
+
+function showReminderModal() {
+  const modal = document.getElementById('reminderModal');
+  const input = document.getElementById('reminderTimeInput');
+  
+  // Set current time
+  const currentTime = `${reminderHour.toString().padStart(2,'0')}:${reminderMinute.toString().padStart(2,'0')}`;
+  input.value = currentTime;
+  
+  modal.style.display = 'flex';
+}
+
+function hideReminderModal() {
+  document.getElementById('reminderModal').style.display = 'none';
+}
+
+async function saveReminderTime() {
+  const timeInput = document.getElementById('reminderTimeInput').value;
+  if (!timeInput) return;
+
+  const [hour, minute] = timeInput.split(':').map(Number);
+  
+  reminderHour = hour;
+  reminderMinute = minute;
+
+  await setCfg('reminderHour', hour);
+  await setCfg('reminderMinute', minute);
+
+  updateReminderStatus();
+  hideReminderModal();
+
+  // Re-schedule with new time
+  if (Notification.permission === "granted") {
+    scheduleCustomReminder();
+  } else {
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") {
+      scheduleCustomReminder();
+    }
+  }
+
+  toast(`Reminder set for ${timeInput} daily`);
+}
+
+function scheduleCustomReminder() {
+  const now = new Date();
+  let reminderTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), reminderHour, reminderMinute, 0);
+
+  if (now > reminderTime) {
+    reminderTime.setDate(reminderTime.getDate() + 1);
+  }
+
+  const delay = reminderTime.getTime() - now.getTime();
+
+  // Clear any previous timeout if exists (optional improvement)
+  if (window.reminderTimeout) clearTimeout(window.reminderTimeout);
+
+  window.reminderTimeout = setTimeout(() => {
+    showReminderNotification();
+    setTimeout(scheduleCustomReminder, 24 * 60 * 60 * 1000); // next day
+  }, delay);
+}
+
+function showReminderNotification() {
+  const timeStr = `${reminderHour.toString().padStart(2,'0')}:${reminderMinute.toString().padStart(2,'0')}`;
+  
+  new Notification("Apro Tracker Reminder", {
+    body: `It's ${timeStr}! Time to log today's macros, supplements & weight 💪`,
+    icon: '/personal-macro-trakcer/icon-192.png',
+    badge: '/personal-macro-trakcer/icon-192.png',
+    tag: 'daily-macro-reminder',
+    vibrate: [300, 100, 300]
+  });
+}
 init();
 </script>
 </body>

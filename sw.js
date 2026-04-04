@@ -1,8 +1,11 @@
 const CACHE = 'apro-v1';
+
 const FILES = [
   '/personal-macro-trakcer/',
   '/personal-macro-trakcer/index.html',
-  '/personal-macro-trakcer/manifest.json'
+  '/personal-macro-trakcer/manifest.json',
+  '/personal-macro-trakcer/icon-192.png',
+  '/personal-macro-trakcer/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -23,6 +26,16 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('/index.html')))
+    caches.match(e.request).then(r => 
+      r || fetch(e.request).catch(() => caches.match('/personal-macro-trakcer/index.html'))
+    )
+  );
+});
+
+// Open app when user taps the reminder notification
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow('/personal-macro-trakcer/')
   );
 });
