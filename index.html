@@ -880,13 +880,16 @@ function scheduleCustomReminder() {
 function showReminderNotification() {
   const timeStr = `${reminderHour.toString().padStart(2,'0')}:${reminderMinute.toString().padStart(2,'0')}`;
   
-  new Notification("Apro Tracker Reminder", {
+  const notification = new Notification("Apro Tracker Reminder", {
     body: `It's ${timeStr}! Time to log today's macros, supplements & weight 💪`,
     icon: '/personal-macro-trakcer/icon-192.png',
     badge: '/personal-macro-trakcer/icon-192.png',
     tag: 'daily-macro-reminder',
-    vibrate: [300, 100, 300]
+    vibrate: [400, 200, 400, 200, 400],
+    requireInteraction: true   // Keeps it visible longer
   });
+
+  console.log("Notification fired at", new Date());
 }
 init();
 </script>
