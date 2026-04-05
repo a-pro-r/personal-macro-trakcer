@@ -272,22 +272,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
           dinner,6:30pm,Dinner,880,65,88,24,Ramen/Poha + 2 eggs|Yogurt|Ghee</div>
       </div>
 
-      <div class="sec">Reminders</div>
-      <div class="card">
-        <div class="water-hdr" style="padding-bottom:16px">
-          <div>
-            <div class="water-title">Daily Reminder</div>
-            <div id="reminderStatus" style="font-size:13px;color:var(--accent2);margin-top:4px">
-              Not set
-            </div>
-          </div>
-          <button onclick="showReminderModal()" 
-                  style="padding:10px 16px;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.3);border-radius:10px;color:var(--accent);font-weight:600;cursor:pointer">
-            Set Time
-          </button>
-        </div>
-      </div>
-
       <div class="sec">Rules</div>
       <div class="stat-card">
         <div class="sr"><span class="sl">Pre-WOD fuel</span><span class="sv">Banana + 1 scoop</span></div>
@@ -314,29 +298,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
     </div>
   </div>
 </div>
-<div id="reminderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:320px">
-    <div style="font-size:18px;font-weight:700;margin-bottom:20px;text-align:center">Set Daily Reminder</div>
-    
-    <div style="margin-bottom:20px">
-      <label style="display:block;font-size:13px;color:var(--text3);margin-bottom:8px">Reminder Time</label>
-      <input type="time" id="reminderTimeInput" 
-              style="width:100%;padding:14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:18px">
-    </div>
-
-    <div style="display:flex;gap:12px">
-      <button onclick="hideReminderModal()" 
-              style="flex:1;padding:14px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-weight:600">
-        Cancel
-      </button>
-      <button onclick="saveReminderTime()" 
-              style="flex:1;padding:14px;background:var(--accent);color:#0a0a0a;border:none;border-radius:10px;font-weight:700">
-        Save Reminder
-      </button>
-    </div>
-  </div>
-</div>
-  
   <div class="toast" id="toast"></div>
 
 <script>
@@ -748,7 +709,6 @@ async function switchPage(name) {
   
   if (name === 'stats') {
     showCSVLoaded();
-    updateReminderStatus();
   }
 }
 
@@ -775,122 +735,12 @@ async function init() {
     document.getElementById('loading').style.display='none';
     document.getElementById('appRoot').style.display='flex';
     registerSW();
-    setupDailyReminder();
   } catch(e) {
     console.error(e);
     document.querySelector('.loading-sub').textContent='Error: '+e.message;
   }
 }
 
-/// ======================
-// CUSTOM DAILY REMINDER
-// ======================
-
-let reminderHour = 19;   // default 7 PM
-let reminderMinute = 0;
-
-async function setupDailyReminder() {
-  if (!("Notification" in window)) return;
-
-  const savedHour = await getCfg('reminderHour');
-  const savedMinute = await getCfg('reminderMinute');
-
-  if (savedHour !== null) reminderHour = savedHour;
-  if (savedMinute !== null) reminderMinute = savedMinute;
-
-  updateReminderStatus();
-
-  // Request permission and schedule if enabled
-  if (Notification.permission === "granted") {
-    scheduleCustomReminder();
-  }
-}
-
-function updateReminderStatus() {
-  const statusEl = document.getElementById('reminderStatus');
-  if (!statusEl) return;
-  
-  const timeStr = `${reminderHour.toString().padStart(2,'0')}:${reminderMinute.toString().padStart(2,'0')}`;
-  statusEl.textContent = `Daily at ${timeStr}`;
-  statusEl.style.color = 'var(--accent2)';
-}
-
-function showReminderModal() {
-  const modal = document.getElementById('reminderModal');
-  const input = document.getElementById('reminderTimeInput');
-  
-  // Set current time
-  const currentTime = `${reminderHour.toString().padStart(2,'0')}:${reminderMinute.toString().padStart(2,'0')}`;
-  input.value = currentTime;
-  
-  modal.style.display = 'flex';
-}
-
-function hideReminderModal() {
-  document.getElementById('reminderModal').style.display = 'none';
-}
-
-async function saveReminderTime() {
-  const timeInput = document.getElementById('reminderTimeInput').value;
-  if (!timeInput) return;
-
-  const [hour, minute] = timeInput.split(':').map(Number);
-  
-  reminderHour = hour;
-  reminderMinute = minute;
-
-  await setCfg('reminderHour', hour);
-  await setCfg('reminderMinute', minute);
-
-  updateReminderStatus();
-  hideReminderModal();
-
-  // Re-schedule with new time
-  if (Notification.permission === "granted") {
-    scheduleCustomReminder();
-  } else {
-    const perm = await Notification.requestPermission();
-    if (perm === "granted") {
-      scheduleCustomReminder();
-    }
-  }
-
-  toast(`Reminder set for ${timeInput} daily`);
-}
-
-function scheduleCustomReminder() {
-  const now = new Date();
-  let reminderTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), reminderHour, reminderMinute, 0);
-
-  if (now > reminderTime) {
-    reminderTime.setDate(reminderTime.getDate() + 1);
-  }
-
-  const delay = reminderTime.getTime() - now.getTime();
-
-  // Clear any previous timeout if exists (optional improvement)
-  if (window.reminderTimeout) clearTimeout(window.reminderTimeout);
-
-  window.reminderTimeout = setTimeout(() => {
-    showReminderNotification();
-    setTimeout(scheduleCustomReminder, 24 * 60 * 60 * 1000); // next day
-  }, delay);
-}
-
-function showReminderNotification() {
-  const timeStr = `${reminderHour.toString().padStart(2,'0')}:${reminderMinute.toString().padStart(2,'0')}`;
-  
-  const notification = new Notification("Apro Tracker Reminder", {
-    body: `It's ${timeStr}! Time to log today's macros, supplements & weight 💪`,
-    icon: '/personal-macro-trakcer/icon-192.png',
-    badge: '/personal-macro-trakcer/icon-192.png',
-    tag: 'daily-macro-reminder',
-    vibrate: [400, 200, 400, 200, 400],
-    requireInteraction: true   // Keeps it visible longer
-  });
-
-  console.log("Notification fired at", new Date());
-}
 init();
 </script>
 </body>

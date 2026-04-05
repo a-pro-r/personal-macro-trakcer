@@ -31,11 +31,3 @@ self.addEventListener('fetch', e => {
     )
   );
 });
-
-// Open app when user taps the reminder notification
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/personal-macro-trakcer/')
-  );
-});
